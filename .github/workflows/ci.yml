@@ -1,0 +1,32 @@
+name: Validar Financy
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar configuração
+        run: docker compose config --quiet
+      - name: Construir e iniciar
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: Testar API
+        run: docker compose exec -T backend pnpm test
+      - name: Compilar backend e frontend
+        run: |
+          docker compose exec -T backend pnpm build
+          docker compose exec -T frontend pnpm build
+      - name: Verificar comunicação entre serviços
+        run: |
+          curl --fail http://localhost:4000/health
+          curl --fail --json '{"query":"{ __typename }"}' http://localhost:5173/graphql
+      - name: Exibir logs em caso de falha
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Encerrar ambiente
+        if: always()
+        run: docker compose down

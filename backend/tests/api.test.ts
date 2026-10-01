@@ -6,6 +6,7 @@ import { rmSync, writeFileSync } from "node:fs";
 const filename = `test-${randomBytes(6).toString("hex")}.db`;
 process.env.DATABASE_URL = `file:./${filename}`;
 process.env.JWT_SECRET = randomBytes(48).toString("hex");
+process.env.CORS_ORIGIN = "http://localhost:5173";
 writeFileSync(new URL(`../prisma/${filename}`, import.meta.url), "");
 execFileSync(
   process.execPath,
