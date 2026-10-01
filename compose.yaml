@@ -1,0 +1,105 @@
+name: financy
+
+services:
+  backend:
+    build:
+      context: .
+      target: backend-dev
+    init: true
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4000
+      DATABASE_URL: file:/app/data/dev.db
+      JWT_SECRET: ${JWT_SECRET:-}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
+    volumes:
+      - financy-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      start_period: 30s
+      retries: 12
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/src
+          target: /app/backend/src
+          initial_sync: true
+        - action: sync
+          path: ./backend/tests
+          target: /app/backend/tests
+          initial_sync: true
+        - action: sync
+          path: ./backend/tsconfig.json
+          target: /app/backend/tsconfig.json
+          initial_sync: true
+        - action: rebuild
+          path: ./backend/prisma
+        - action: rebuild
+          path: ./backend/package.json
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
+        - action: rebuild
+          path: ./Dockerfile
+
+  frontend:
+    build:
+      context: .
+      target: frontend-dev
+    init: true
+    environment:
+      VITE_BACKEND_URL: /graphql
+      BACKEND_PROXY_URL: http://backend:4000
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 12
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src
+          target: /app/frontend/src
+          initial_sync: true
+        - action: sync
+          path: ./frontend/public
+          target: /app/frontend/public
+          initial_sync: true
+        - action: sync
+          path: ./frontend/index.html
+          target: /app/frontend/index.html
+          initial_sync: true
+        - action: sync
+          path: ./frontend/tsconfig.json
+          target: /app/frontend/tsconfig.json
+          initial_sync: true
+        - action: sync+restart
+          path: ./frontend/vite.config.ts
+          target: /app/frontend/vite.config.ts
+          initial_sync: true
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
+        - action: rebuild
+          path: ./Dockerfile
+
+volumes:
+  financy-data:
