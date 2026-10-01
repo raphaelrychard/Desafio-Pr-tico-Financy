@@ -27,15 +27,12 @@ services:
         - action: sync+restart
           path: ./backend/src
           target: /app/backend/src
-          initial_sync: true
         - action: sync
           path: ./backend/tests
           target: /app/backend/tests
-          initial_sync: true
         - action: sync
           path: ./backend/tsconfig.json
           target: /app/backend/tsconfig.json
-          initial_sync: true
         - action: rebuild
           path: ./backend/prisma
         - action: rebuild
@@ -73,23 +70,18 @@ services:
         - action: sync
           path: ./frontend/src
           target: /app/frontend/src
-          initial_sync: true
         - action: sync
           path: ./frontend/public
           target: /app/frontend/public
-          initial_sync: true
         - action: sync
           path: ./frontend/index.html
           target: /app/frontend/index.html
-          initial_sync: true
         - action: sync
           path: ./frontend/tsconfig.json
           target: /app/frontend/tsconfig.json
-          initial_sync: true
         - action: sync+restart
           path: ./frontend/vite.config.ts
           target: /app/frontend/vite.config.ts
-          initial_sync: true
         - action: rebuild
           path: ./frontend/package.json
         - action: rebuild
